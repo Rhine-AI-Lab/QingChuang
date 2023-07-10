@@ -62,11 +62,7 @@ def Gettokent():
 
 # 向远程服务上传整段语音进行识别
 def baidu_speech():
-    APP_ID = '25543588'
-    API_KEY = 'vkGlpLlECrbqESVnvzYRL2eG'
-    SECRET_KEY = 'kIYoG0T4mzYiXROTYeVm4mLhu9sxzPtq'
-
-    client = AipSpeech(APP_ID, API_KEY, SECRET_KEY)
+    client = AipSpeech('25543588', 'vkGlpLlECrbqESVnvzYRL2eG', 'kIYoG0T4mzYiXROTYeVm4mLhu9sxzPtq')
 
     # .wav文件转.pcm文件
     os.system('ffmpeg -y  -i recording.wav  -acodec pcm_s16le -f s16le -ac 1 -ar 16000 recording.pcm')
