@@ -13,13 +13,12 @@ from aip import AipSpeech
 
 r = sr.Recognizer()
 
-harvard = sr.AudioFile('recording.wav')
+harvard = sr.AudioFile('../../../第一批/recording.wav')
 with harvard as source:
     audio = r.record(source)
 
 # text=r.recognize_google(audio)
 # print( r.recognize_google(audio))
-
 
 def rec(rate=16000):
     r = sr.Recognizer()
@@ -27,7 +26,7 @@ def rec(rate=16000):
         print("please say something")
         audio = r.listen(source)
 
-    with open("recording.wav", "wb") as f:
+    with open("../../../第一批/recording.wav", "wb") as f:
         # print(audio.get_wav_data())
         f.write(audio.get_wav_data())
 
@@ -61,7 +60,11 @@ def Gettokent():
 
 # 向远程服务上传整段语音进行识别
 def baidu_speech():
-    client = AipSpeech('25543588', 'vkGlpLlECrbqESVnvzYRL2eG', 'kIYoG0T4mzYiXROTYeVm4mLhu9sxzPtq')
+    APP_ID = '25543588'
+    API_KEY = 'vkGlpLlECrbqESVnvzYRL2eG'
+    SECRET_KEY = 'kIYoG0T4mzYiXROTYeVm4mLhu9sxzPtq'
+
+    client = AipSpeech(APP_ID, API_KEY, SECRET_KEY)
 
     # .wav文件转.pcm文件
     os.system('ffmpeg -y  -i recording.wav  -acodec pcm_s16le -f s16le -ac 1 -ar 16000 recording.pcm')
@@ -157,7 +160,7 @@ p.terminate()
 from playsound import playsound
 
 if __name__ == '__main__':
-    # rec()
+    rec()
     c = r.recognize_sphinx(audio, language='zh-cn')
     print(c)
     text = baidu_speech()
