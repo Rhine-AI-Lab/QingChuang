@@ -5,15 +5,8 @@ import requests
 import base64
 import cv2  # pip install opencv-python
 import threading
-from picamera import PiCamera
-from aip import AipSpeech
-import os
-
-APP_ID = '26796512'
-API_KEY = 'UYvZcmGzuwmCNbvmoFXGndno'
-SECRET_KEY = 's4X4lViSGzeH0Y4At9rQOduO7GRX4WER'
-
-client = AipSpeech('26796512', 'UYvZcmGzuwmCNbvmoFXGndno', 's4X4lViSGzeH0Y4At9rQOduO7GRX4WER')
+import math
+import numpy
 
 
 # cv2图片转base64文本
@@ -52,6 +45,7 @@ def draw_person(image, json):
         'left_shoulder,left_hip,left_knee,left_ankle',
         'right_shoulder,right_hip,right_knee,right_ankle',
     ]
+    cv2.rectangle(image, [0, 0], [640, 480], (255, 255, 255), -1)
     for info in json['person_info']:  # 循环绘制每一个人
         bp = info['body_parts']
         for l in lines:
@@ -69,68 +63,43 @@ def draw_person(image, json):
     return image
 
 
-# 树莓派播放MP3音频文件
-def play(path_str):
-    os.system('ffplay %s -nodisp -autoexit -loglevel quiet' % path_str)
-
-lst = 0
-# 语音合成并播报
-def speech(text):
-    global lst
-    if time.time() - lst < 3:
-        return
-    lst = time.time()
-    path = './temp.mp3'
-    result = client.synthesis(text, 'zh', 1, {'vol': 10, })
-
-    # 识别正确返回语音二进制
-    if not isinstance(result, dict):
-        with open(path, 'wb') as f:
-            f.write(result)
-        time.sleep(0.2)
-        play(path)
-
-
 # 程序从这里开始运行
 
 # 登录百度AI， ak sk 在应用列表获取
-ak = 'msfO9QL6GQZRGa1Xgyt7xOWH'
-sk = 'gO8AL980bdkbnOb5614ARTMm7IP1fKjy'
-token = login_baidu_ai(ak, sk)  # 拿到登录后的凭证Token
-print('Token:', token)
+ak = 'msfO9QL6GQZRGa1Xgyt7xOWH'  # '0XWU2LjEjSYAoTEUGXGLZifY'
+sk = 'gO8AL980bdkbnOb5614ARTMm7IP1fKjy'  # 'uq06vCyy4Bgjj68Y7KaGvVyOa5bvICx8'
+token = login_baidu_ai(ak, sk)  # 拿到登录后的凭证Token print('Token:', token)
 
-cap = PiCamera()  # 定义一个摄像头对象
-cap.resolution = (800, 600)
-t = time.time()  # 记录开始运行的时间
+cap = cv2.VideoCapture(0)  # 打开电脑摄像头 0指第一个
+t = time.time()  # 记录开始运行s的时间
 result = None  # 记录识别结果
+
+
+def dis(p1, p2):
+    return math.sqrt((p1['x'] - p2['xs']) ** 2 + (p1['y'] - p2['y']) ** 2)
 
 
 def update(frame):
     global result
-    result = analysis_pose(frame, token)  # 通过百度云获取结果
-    print(result)  # 输出结果
-    num = len(result['person_info'])
-    wt = num * 0.5
-    print(f'当前项目 海盗船: %d人  预计等待: %.1f分钟' % (num, wt))
-    print(f'过山车: 15人  预计等待: 3分钟')
-    print(f'摩天轮: 18人  预计等待: 1.8分钟')
-    print(f'碰碰车: 20人  预计等待: 4分钟')
-    if wt > 1.8:
-        print("推荐游玩: 摩天轮")
-    else:
-        print("推荐游玩: 海盗船")
+    rr = analysis_pose(frame, token)  # 通过百度云获取结果
+    # print('检测到人数：', rr['person_num'])
+    if rr['person_num'] == 0:
+        return
+    result = rr
+    print(result)
 
 
-path = 'temp.jpg'
-while cv2.waitKey(1):  # 循环不断运行
-    cap.capture(path)  # 拍照并保存
-    frame = cv2.imread(path)
+
+while cv2.waitKey(100) < 0:  # 循环不断运行
+    hasFrame, frame = cap.read()  # 获取摄像头画面
+    if not hasFrame:  # 如果没有图像 跳过
+        break
 
     if time.time() - t > 0.6:  # 每隔0.6秒更新画面
-        print('update')
         threading.Thread(target=update, args=(frame,)).start()
         t = time.time()  # 更新结果时间
     if result:
-        draw_person(frame, result)  # 绘制结果到图像
+        f = draw_person(frame.copy(), result)  # 绘制结果到图像
+        cv2.imshow("POSE", f)  # 显示运行结
 
-    cv2.imshow("POSE", frame)  # 显示运行结
+

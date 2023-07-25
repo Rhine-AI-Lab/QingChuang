@@ -13,7 +13,7 @@ APP_ID = '26796512'
 API_KEY = 'UYvZcmGzuwmCNbvmoFXGndno'
 SECRET_KEY = 's4X4lViSGzeH0Y4At9rQOduO7GRX4WER'
 
-client = AipSpeech('26796512', 'UYvZcmGzuwmCNbvmoFXGndno', 's4X4lViSGzeH0Y4At9rQOduO7GRX4WER')
+client = AipSpeech(APP_ID, API_KEY, SECRET_KEY)
 
 
 # cv2图片转base64文本
@@ -32,14 +32,15 @@ def login_baidu_ai(ak, sk):
 
 
 # 调用百度AI解析人体关键点图片
-def analysis_pose(image_np, access_token):
-    params = {"image": image_to_base64(image_np)}
-    request_url = "https://aip.baidubce.com/rest/2.0/image-classify/v1/body_analysis"
+def analysis_detect(image_np, access_token):
+    request_url = "https://aip.baidubce.com/rest/2.0/face/v3/detect"
     request_url = request_url + "?access_token=" + access_token
     headers = {'content-type': 'application/x-www-form-urlencoded'}
+    params = {"image": image_to_base64(image_np),
+              "image_type": "BASE64",
+              "face_field": "faceshape,facetype,age,beauty,gender"}
     response = requests.post(request_url, data=params, headers=headers)
     return response.json()
-
 
 # 绘制结果到图像上
 def draw_person(image, json):
@@ -99,38 +100,26 @@ sk = 'gO8AL980bdkbnOb5614ARTMm7IP1fKjy'
 token = login_baidu_ai(ak, sk)  # 拿到登录后的凭证Token
 print('Token:', token)
 
-cap = PiCamera()  # 定义一个摄像头对象
-cap.resolution = (800, 600)
-t = time.time()  # 记录开始运行的时间
-result = None  # 记录识别结果
+cap = cv2.VideoCapture(0)  # 打开电脑摄像头 0指第一个
+t = time.time()  # 记录开始运行s的时间
+result = None
 
 
 def update(frame):
     global result
-    result = analysis_pose(frame, token)  # 通过百度云获取结果
-    print(result)  # 输出结果
-    num = len(result['person_info'])
-    wt = num * 0.5
-    print(f'当前项目 海盗船: %d人  预计等待: %.1f分钟' % (num, wt))
-    print(f'过山车: 15人  预计等待: 3分钟')
-    print(f'摩天轮: 18人  预计等待: 1.8分钟')
-    print(f'碰碰车: 20人  预计等待: 4分钟')
-    if wt > 1.8:
-        print("推荐游玩: 摩天轮")
-    else:
-        print("推荐游玩: 海盗船")
+    rr = analysis_detect(frame, token)  # 通过百度云获取结果
+    print(rr)
 
 
-path = 'temp.jpg'
-while cv2.waitKey(1):  # 循环不断运行
-    cap.capture(path)  # 拍照并保存
-    frame = cv2.imread(path)
+while cv2.waitKey(100):  # 循环不断运行
+    hasFrame, frame = cap.read()  # 获取摄像头画面
+    if not hasFrame:  # 如果没有图像 跳过
+        break
 
     if time.time() - t > 0.6:  # 每隔0.6秒更新画面
-        print('update')
-        threading.Thread(target=update, args=(frame,)).start()
+        # threading.Thread(target=update, args=(frame,)).start()
         t = time.time()  # 更新结果时间
     if result:
-        draw_person(frame, result)  # 绘制结果到图像
+        f = draw_person(frame.copy(), result)  # 绘制结果到图像
+        cv2.imshow("POSE", f)  # 显示运行结
 
-    cv2.imshow("POSE", frame)  # 显示运行结
