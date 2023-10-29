@@ -1,12 +1,39 @@
 # coding=utf-8
 import base64
 import json
+import os
 
+from aip import AipSpeech
 import requests
 from picamera import PiCamera
 import base64
 import time
 
+lst = 0
+APP_ID = '26796512'
+API_KEY = 'UYvZcmGzuwmCNbvmoFXGndno'
+SECRET_KEY = 's4X4lViSGzeH0Y4At9rQOduO7GRX4WER'
+client = AipSpeech(APP_ID, API_KEY, SECRET_KEY)
+
+def play(path_str):
+    global lst
+    if time.time() - lst < 3:
+        return
+    lst = time.time()
+    os.system('ffplay %s -nodisp -autoexit -loglevel quiet' % path_str)
+
+
+# 语音合成并播报
+def speech(text):
+    path = './temp.mp3'
+    result = client.synthesis(text, 'zh', 1, {'vol': 10, })
+
+    # 识别正确返回语音二进制
+    if not isinstance(result, dict):
+        with open(path, 'wb') as f:
+            f.write(result)
+        time.sleep(0.1)
+        play(path)
 
 # 照相函数
 def take_photo(path):
@@ -47,9 +74,11 @@ def bd_request(img, token, interface, data={}):
     data['image_type'] = 'BASE64'
     data['max_face_num'] = 120
     data = json.dumps(data)
-    # print(data)
+    print(data)
     result = requests.post(url, data=data, headers=headers)
+    print(result.json())
     result = result.json()
+    print(result)
     return result
 
 
@@ -70,7 +99,7 @@ def detect(img, token):
 
 
 if __name__ == '__main__':
-    token = get_token("UYvZcmGzuwmCNbvmoFXGndno", "s4X4lViSGzeH0Y4At9rQOduO7GRX4WER")
+    token = get_token("D7uQyHluUAd8BdyGxEjecqQc", "sknIMSbGODyGZfGmVtriTTXm5nFE5MXq")
     print('Token: ' + token)
 
     path = "./temp.jpg"
@@ -86,5 +115,9 @@ if __name__ == '__main__':
             name = face['user_id']
             if face['score'] > 70:
                 print("人脸识别结果为: " + name)
+                speech("这是你家小孩方培元")
+
             else:
-                print('该人脸在人脸库中不存在')
+                speech('该人脸在人脸库中不存在')
+
+                print("这是邻居")
