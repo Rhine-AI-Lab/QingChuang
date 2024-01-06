@@ -10,15 +10,14 @@ import os
 import pyaudio
 from aip import AipSpeech
 
-
 r = sr.Recognizer()
-
-harvard = sr.AudioFile('../../../第一批/recording.wav')
+harvard = sr.AudioFile('../recording.wav')
 with harvard as source:
     audio = r.record(source)
 
 # text=r.recognize_google(audio)
 # print( r.recognize_google(audio))
+
 
 def rec(rate=16000):
     r = sr.Recognizer()

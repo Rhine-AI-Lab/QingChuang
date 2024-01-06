@@ -7,8 +7,8 @@ import json
 # import sounddevice as sr
 import os
 
-API_KEY1 = "CZezNc44QipcGu9jKRmXGx4y"
-SECRET_KEY1 = "0GQ3v18CIp1F6CAc7vrLclZe7snmWMLS"
+API_KEY = "CZezNc44QipcGu9jKRmXGx4y"
+SECRET_KEY = "0GQ3v18CIp1F6CAc7vrLclZe7snmWMLS"
 
 
 # def rec(rate=16000):
@@ -46,7 +46,7 @@ def get_access_token():
     :return: access_token，或是None(如果错误)
     """
     url = "https://aip.baidubce.com/oauth/2.0/token"
-    params = {"grant_type": "client_credentials", "client_id": API_KEY1, "client_secret": SECRET_KEY1}
+    params = {"grant_type": "client_credentials", "client_id": API_KEY, "client_secret": SECRET_KEY}
     return str(requests.post(url, params=params).json().get("access_token"))
 
 
@@ -81,7 +81,7 @@ def get_access_token():
     """
     url = "https://aip.baidubce.com/oauth/2.0/token"
     params = {"grant_type": "client_credentials",
-              "client_id": API_KEY1, "client_secret": SECRET_KEY1}
+              "client_id": API_KEY, "client_secret": SECRET_KEY}
     return str(requests.post(url, params=params).json().get("access_token"))
 
 
